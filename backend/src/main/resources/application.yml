@@ -33,7 +33,7 @@ spring:
       client:
         registration:
           kakao:
-            client-id: 27f36d6e010908844fbe8b200a8e25d8
+            client-id: a55fbac2b1ec1017835ea67b2a584ad5
             scope: profile_nickname, profile_image
             client-name: Kakao
             authorization-grant-type: authorization_code
