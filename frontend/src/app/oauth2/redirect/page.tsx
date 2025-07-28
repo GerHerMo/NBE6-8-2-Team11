@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function OAuth2RedirectPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isProcessing, setIsProcessing] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const accessToken = searchParams.get('accessToken');
@@ -19,10 +21,29 @@ export default function OAuth2RedirectPage() {
       // 메인 페이지로 리다이렉트
       router.push('/');
     } else {
-      // 토큰이 없으면 로그인 페이지로 리다이렉트
-      router.push('/login');
+      // 토큰이 없으면 에러 상태로 설정하고 3초 후 홈으로 리다이렉트
+      setError('로그인에 실패했습니다. 다시 시도해주세요.');
+      setIsProcessing(false);
+      
+      // 3초 후 홈으로 리다이렉트
+      setTimeout(() => {
+        router.push('/');
+      }, 3000);
     }
   }, [searchParams, router]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">로그인 실패</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-sm text-gray-500">잠시 후 홈페이지로 이동합니다...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center">
