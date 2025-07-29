@@ -2,32 +2,62 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { userApi } from '../../../shared/services/userApi';
 
 function OAuth2RedirectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    const accessToken = searchParams.get('accessToken');
-    const refreshToken = searchParams.get('refreshToken');
+    const processLogin = async () => {
+      const accessToken = searchParams.get('accessToken');
+      const refreshToken = searchParams.get('refreshToken');
+      const accountEmail = searchParams.get('account_email');
+      const profileImage = searchParams.get('profile_image');
+      const profileNickname = searchParams.get('profile_nickname');
 
-    if (accessToken && refreshToken) {
-      // 토큰을 로컬 스토리지에 저장
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
+      if (accessToken && refreshToken) {
+        // 토큰을 로컬 스토리지에 저장
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
 
-      // 메인 페이지로 리다이렉트
-      router.push('/');
-    } else {
-      // 토큰이 없으면 에러 상태로 설정하고 3초 후 홈으로 리다이렉트
-      setError('로그인에 실패했습니다. 다시 시도해주세요.');
-      
-      // 3초 후 홈으로 리다이렉트
-      setTimeout(() => {
+        // 카카오 사용자 정보가 있으면 업데이트
+        if (accountEmail && profileImage && profileNickname) {
+          setIsProcessing(true);
+          try {
+            const kakaoUserInfo = {
+              account_email: accountEmail,
+              profile_image: profileImage,
+              profile_nickname: profileNickname
+            };
+
+            // 카카오 사용자 정보로 사용자 정보 업데이트
+            await userApi.updateUserFromKakao(kakaoUserInfo);
+            console.log('카카오 사용자 정보 업데이트 완료');
+          } catch (error) {
+            console.error('카카오 사용자 정보 업데이트 실패:', error);
+            // 사용자 정보 업데이트 실패해도 로그인은 성공으로 처리
+          } finally {
+            setIsProcessing(false);
+          }
+        }
+
+        // 메인 페이지로 리다이렉트
         router.push('/');
-      }, 3000);
-    }
+      } else {
+        // 토큰이 없으면 에러 상태로 설정하고 3초 후 홈으로 리다이렉트
+        setError('로그인에 실패했습니다. 다시 시도해주세요.');
+        
+        // 3초 후 홈으로 리다이렉트
+        setTimeout(() => {
+          router.push('/');
+        }, 3000);
+      }
+    };
+
+    processLogin();
   }, [searchParams, router]);
 
   if (error) {
@@ -47,7 +77,9 @@ function OAuth2RedirectContent() {
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">로그인 처리 중...</p>
+        <p className="text-gray-600">
+          {isProcessing ? '사용자 정보를 업데이트하는 중...' : '로그인 처리 중...'}
+        </p>
       </div>
     </div>
   );

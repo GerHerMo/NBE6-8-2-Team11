@@ -5,28 +5,40 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS, BRAND_INFO } from '../../constants';
+import { userApi } from '../../services/userApi';
+import { User } from '../../../features/profile/types';
 
 // 실제 토큰 기반 로그인 상태 관리
 const useAuth = () => {
-  const [user, setUser] = useState<{ name: string } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // localStorage에서 토큰 확인
-    const accessToken = localStorage.getItem('accessToken');
-    const refreshToken = localStorage.getItem('refreshToken');
-    
-    if (accessToken && refreshToken) {
-      // 토큰이 있으면 로그인된 상태로 설정
-      // 실제로는 토큰을 디코드하여 사용자 정보를 가져와야 하지만,
-      // 여기서는 간단히 토큰 존재 여부만 확인
-      setUser({ name: '사용자' });
-    } else {
-      // 토큰이 없으면 로그인하지 않은 상태
-      setUser(null);
-    }
-    
-    setIsLoading(false);
+    const loadUserInfo = async () => {
+      // localStorage에서 토큰 확인
+      const accessToken = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (accessToken && refreshToken) {
+        try {
+          // API를 통해 사용자 정보 가져오기
+          const userData = await userApi.getCurrentUser();
+          setUser(userData);
+        } catch (error) {
+          console.warn('API 서버에 연결할 수 없습니다. 모의 데이터를 사용합니다.');
+          // API 오류는 무시하고 모의 데이터 사용
+          const userData = await userApi.getCurrentUser();
+          setUser(userData);
+        }
+      } else {
+        // 토큰이 없으면 로그인하지 않은 상태
+        setUser(null);
+      }
+      
+      setIsLoading(false);
+    };
+
+    loadUserInfo();
   }, []);
 
   const logout = () => {

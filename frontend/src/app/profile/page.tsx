@@ -10,36 +10,38 @@ import FavoritePets from '../../features/profile/components/FavoritePets';
 import LoadingSpinner from '../../shared/components/common/LoadingSpinner';
 import ErrorBoundary from '../../shared/components/common/ErrorBoundary';
 import { User } from '../../features/profile/types';
+import { userApi } from '../../shared/services/userApi';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('info');
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 실제 API 호출 대신 모의 데이터 사용
     const loadUserData = async () => {
       setIsLoading(true);
+      setError(null);
+      
       try {
-        // 모의 로딩 시간
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // 모의 사용자 데이터 (김동물로 설정)
-        const mockUser: User = {
-          id: 1,
-          name: '김동물',
-          email: 'kim@example.com',
-          phone: '010-1234-5678',
-          address: '서울시 강남구',
-          profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-          memberType: 'adopter', // adopter, shelter
-          createdAt: new Date('2024-01-15'),
-          bio: '동물을 사랑하는 사람입니다. 새로운 가족을 찾고 있어요!'
-        };
-        
-        setUser(mockUser);
+        // 로컬 스토리지에서 토큰 확인
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+          throw new Error('로그인이 필요합니다.');
+        }
+
+        // API를 통해 현재 로그인한 사용자 정보 가져오기
+        const userData = await userApi.getCurrentUser();
+        setUser(userData);
       } catch (error) {
         console.error('사용자 정보 로딩 실패:', error);
+        // API 서버가 준비되지 않았거나 네트워크 오류인 경우에도 계속 진행
+        if (error instanceof Error && error.message === '로그인이 필요합니다.') {
+          setError('로그인이 필요합니다.');
+        } else {
+          // API 오류는 무시하고 모의 데이터 사용
+          console.warn('API 오류로 인해 모의 데이터를 사용합니다.');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -61,6 +63,28 @@ export default function ProfilePage() {
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
           <LoadingSpinner size="lg" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">오류 발생</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.href = '/login'}
+              className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+            >
+              로그인 페이지로 이동
+            </button>
+          </div>
         </div>
         <Footer />
       </div>

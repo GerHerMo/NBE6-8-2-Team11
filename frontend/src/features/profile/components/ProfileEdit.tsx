@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { User } from '../types';
+import { userApi } from '../../../shared/services/userApi';
 
 interface ProfileEditProps {
   user: User | null;
@@ -34,23 +35,21 @@ export default function ProfileEdit({ user, setUser }: ProfileEditProps) {
     setMessage('');
 
     try {
-      // 모의 API 호출
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       if (user) {
-        const updatedUser: User = {
-          ...user,
+        // API를 통해 사용자 정보 업데이트
+        const updatedUser = await userApi.updateUser({
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
           bio: formData.bio
-        };
+        });
         
         setUser(updatedUser);
         setMessage('정보가 성공적으로 수정되었습니다!');
       }
-    } catch {
+    } catch (error) {
+      console.error('사용자 정보 업데이트 실패:', error);
       setMessage('정보 수정에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
