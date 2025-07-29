@@ -12,6 +12,14 @@ interface KakaoUserInfo {
   bio?: string;
 }
 
+// 백엔드 응답 데이터 구조
+interface BackendUserResponse {
+  memberId: number;
+  email: string;
+  name: string;
+  phone: string;
+}
+
 // 개발 환경용 모의 사용자 데이터
 const getMockUser = (): User => ({
   id: 1,
@@ -44,6 +52,23 @@ const getUserId = (): string => {
   return userId || '1'; // 기본값으로 1 사용
 };
 
+// 백엔드 응답을 프론트엔드 User 타입으로 변환
+const convertBackendResponseToUser = (backendData: BackendUserResponse): User => {
+  const kakaoUserInfo = getKakaoUserInfo();
+  
+  return {
+    id: backendData.memberId,
+    name: backendData.name,
+    email: backendData.email,
+    phone: backendData.phone,
+    address: '서울시 강남구', // 기본값
+    profileImage: kakaoUserInfo?.profile_image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+    memberType: 'adopter',
+    createdAt: new Date('2024-01-15'),
+    bio: '동물을 사랑하는 사람입니다. 새로운 가족을 찾고 있어요!'
+  };
+};
+
 // 카카오 정보로 업데이트된 모의 사용자 데이터 생성
 const getMockUserWithKakaoInfo = (): User => {
   const kakaoUserInfo = getKakaoUserInfo();
@@ -74,9 +99,19 @@ export const userApi = {
       const userId = getUserId();
       console.log(`사용자 정보 요청 - userId: ${userId}`);
       
-      const response = await apiClient.get<User>(`/members/${userId}`);
-      console.log('백엔드 API에서 사용자 정보를 가져왔습니다:', response.data);
-      return response.data;
+      const response = await apiClient.get<BackendUserResponse>(`/members/${userId}`);
+      console.log('백엔드 API 응답:', response);
+      
+      if (response.data) {
+        const backendData = response.data;
+        console.log('백엔드에서 받은 사용자 데이터:', backendData);
+        
+        const userData = convertBackendResponseToUser(backendData);
+        console.log('변환된 사용자 데이터:', userData);
+        return userData;
+      } else {
+        throw new Error('백엔드 응답 데이터가 올바르지 않습니다.');
+      }
     } catch (error) {
       console.warn('백엔드 API 서버에 연결할 수 없습니다. 카카오 정보가 포함된 모의 데이터를 사용합니다.');
       // 개발 환경에서는 카카오 정보가 있으면 그것을 우선적으로 사용

@@ -19,19 +19,25 @@ const useAuth = () => {
       const accessToken = localStorage.getItem('accessToken');
       const refreshToken = localStorage.getItem('refreshToken');
       
+      console.log('헤더 - 토큰 확인:', { accessToken: !!accessToken, refreshToken: !!refreshToken });
+      
       if (accessToken && refreshToken) {
         try {
           // API를 통해 사용자 정보 가져오기
+          console.log('헤더 - 사용자 정보 로딩 시작');
           const userData = await userApi.getCurrentUser();
+          console.log('헤더 - 사용자 정보 로딩 완료:', userData);
           setUser(userData);
         } catch (error) {
-          console.warn('API 서버에 연결할 수 없습니다. 모의 데이터를 사용합니다.');
+          console.warn('헤더 - API 서버에 연결할 수 없습니다. 모의 데이터를 사용합니다.');
           // API 오류는 무시하고 모의 데이터 사용
           const userData = await userApi.getCurrentUser();
+          console.log('헤더 - 모의 데이터 사용:', userData);
           setUser(userData);
         }
       } else {
         // 토큰이 없으면 로그인하지 않은 상태
+        console.log('헤더 - 토큰이 없어 로그인하지 않은 상태로 설정');
         setUser(null);
       }
       
@@ -42,8 +48,11 @@ const useAuth = () => {
   }, []);
 
   const logout = () => {
+    console.log('헤더 - 로그아웃 실행');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('kakaoUserInfo');
     setUser(null);
   };
 
@@ -58,6 +67,8 @@ export default function Header() {
     // 백엔드의 OAuth2 엔드포인트로 리다이렉트
     window.location.href = 'http://localhost:8080/oauth2/authorization/kakao';
   };
+
+  console.log('헤더 렌더링 - 로그인 상태:', { user: !!user, isLoading, userInfo: user });
 
   return (
     <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100 sticky top-0 z-50">

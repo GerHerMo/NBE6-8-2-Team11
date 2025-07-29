@@ -36,7 +36,12 @@ export default function ProfilePage() {
         // 카카오 정보가 있으면 자동으로 포함됨
         const userData = await userApi.getCurrentUser();
         console.log('로딩된 사용자 정보:', userData);
-        setUser(userData);
+        
+        if (userData) {
+          setUser(userData);
+        } else {
+          throw new Error('사용자 정보를 불러올 수 없습니다.');
+        }
       } catch (error) {
         console.error('사용자 정보 로딩 실패:', error);
         
@@ -49,7 +54,11 @@ export default function ProfilePage() {
           try {
             const userData = await userApi.getCurrentUser();
             console.log('모의 데이터로 로딩된 사용자 정보:', userData);
-            setUser(userData);
+            if (userData) {
+              setUser(userData);
+            } else {
+              setError('사용자 정보를 불러올 수 없습니다.');
+            }
           } catch (fallbackError) {
             console.error('모의 데이터 로딩도 실패:', fallbackError);
             setError('사용자 정보를 불러올 수 없습니다.');
@@ -69,6 +78,8 @@ export default function ProfilePage() {
     { id: 'history', label: '입양 이력', icon: '📋' },
     { id: 'favorites', label: '관심 동물', icon: '❤️' }
   ];
+
+  console.log('프로필 페이지 렌더링:', { isLoading, user, error });
 
   if (isLoading) {
     return (
@@ -96,6 +107,28 @@ export default function ProfilePage() {
               className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
             >
               로그인 페이지로 이동
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="text-gray-500 text-6xl mb-4">👤</div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">사용자 정보 없음</h2>
+            <p className="text-gray-600 mb-4">사용자 정보를 불러올 수 없습니다.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+            >
+              새로고침
             </button>
           </div>
         </div>
