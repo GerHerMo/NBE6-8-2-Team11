@@ -14,14 +14,34 @@ function OAuth2RedirectContent() {
     const processLogin = async () => {
       const accessToken = searchParams.get('accessToken');
       const refreshToken = searchParams.get('refreshToken');
+      const userId = searchParams.get('userId');
+      const userEmail = searchParams.get('userEmail');
+      const userName = searchParams.get('userName');
       const accountEmail = searchParams.get('account_email');
       const profileImage = searchParams.get('profile_image');
       const profileNickname = searchParams.get('profile_nickname');
+
+      console.log('OAuth2 리다이렉트 - 받은 파라미터:', {
+        accessToken: !!accessToken,
+        refreshToken: !!refreshToken,
+        userId,
+        userEmail,
+        userName,
+        accountEmail,
+        profileImage: !!profileImage,
+        profileNickname
+      });
 
       if (accessToken && refreshToken) {
         // 토큰을 로컬 스토리지에 저장
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
+        
+        // userId가 있으면 저장
+        if (userId) {
+          localStorage.setItem('userId', userId);
+          console.log('사용자 ID 저장:', userId);
+        }
 
         // 카카오 사용자 정보가 있으면 로컬 스토리지에 저장
         if (accountEmail && profileImage && profileNickname) {
@@ -33,6 +53,7 @@ function OAuth2RedirectContent() {
           
           // 카카오 사용자 정보를 로컬 스토리지에 저장
           localStorage.setItem('kakaoUserInfo', JSON.stringify(kakaoUserInfo));
+          console.log('카카오 사용자 정보 저장:', kakaoUserInfo);
           
           setIsProcessing(true);
           try {

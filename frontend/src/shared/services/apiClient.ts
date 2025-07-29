@@ -26,16 +26,25 @@ class ApiClient {
     const normalizedEndpoint = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
     const url = `${this.baseURL}${normalizedEndpoint}`;
     
+    // Authorization 헤더 추가
+    const accessToken = localStorage.getItem('accessToken');
+    const headers = new Headers({
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    });
+
+    if (accessToken) {
+      headers.set('Authorization', `Bearer ${accessToken}`);
+    }
+    
     const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       credentials: 'include', // Include cookies for authentication
       ...options,
     };
 
     console.log(`API 요청: ${config.method || 'GET'} ${url}`);
+    console.log('요청 헤더:', Object.fromEntries(headers.entries()));
 
     try {
       const response = await fetch(url, config);

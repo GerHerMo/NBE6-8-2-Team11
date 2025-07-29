@@ -38,6 +38,12 @@ const getKakaoUserInfo = (): KakaoUserInfo | null => {
   return null;
 };
 
+// 로컬 스토리지에서 userId 가져오기 (없으면 기본값 1 사용)
+const getUserId = (): string => {
+  const userId = localStorage.getItem('userId');
+  return userId || '1'; // 기본값으로 1 사용
+};
+
 // 카카오 정보로 업데이트된 모의 사용자 데이터 생성
 const getMockUserWithKakaoInfo = (): User => {
   const kakaoUserInfo = getKakaoUserInfo();
@@ -64,8 +70,11 @@ export const userApi = {
   // 현재 로그인한 사용자 정보 가져오기
   async getCurrentUser(): Promise<User> {
     try {
-      // 백엔드 서버가 실행 중인지 확인
-      const response = await apiClient.get<User>('/users/me');
+      // userId를 가져와서 올바른 엔드포인트로 요청
+      const userId = getUserId();
+      console.log(`사용자 정보 요청 - userId: ${userId}`);
+      
+      const response = await apiClient.get<User>(`/members/${userId}`);
       console.log('백엔드 API에서 사용자 정보를 가져왔습니다:', response.data);
       return response.data;
     } catch (error) {
@@ -80,6 +89,7 @@ export const userApi = {
   // 카카오 사용자 정보로 사용자 정보 업데이트
   async updateUserFromKakao(kakaoUserInfo: KakaoUserInfo): Promise<User> {
     try {
+      const userId = getUserId();
       const userData = {
         email: kakaoUserInfo.account_email,
         profileImage: kakaoUserInfo.profile_image,
@@ -90,7 +100,8 @@ export const userApi = {
         bio: kakaoUserInfo.bio || ''
       };
 
-      const response = await apiClient.put<User>('/users/me', userData);
+      console.log(`사용자 정보 업데이트 요청 - userId: ${userId}`, userData);
+      const response = await apiClient.put<User>(`/members/${userId}`, userData);
       console.log('백엔드 API를 통해 카카오 사용자 정보를 업데이트했습니다:', response.data);
       return response.data;
     } catch (error) {
@@ -113,7 +124,10 @@ export const userApi = {
   // 사용자 정보 업데이트
   async updateUser(userData: Partial<User>): Promise<User> {
     try {
-      const response = await apiClient.put<User>('/users/me', userData);
+      const userId = getUserId();
+      console.log(`사용자 정보 업데이트 요청 - userId: ${userId}`, userData);
+      
+      const response = await apiClient.put<User>(`/members/${userId}`, userData);
       console.log('백엔드 API를 통해 사용자 정보를 업데이트했습니다:', response.data);
       return response.data;
     } catch (error) {
