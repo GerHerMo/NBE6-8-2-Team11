@@ -30,17 +30,30 @@ export default function ProfilePage() {
           throw new Error('로그인이 필요합니다.');
         }
 
+        console.log('프로필 페이지에서 사용자 정보를 로딩합니다...');
+        
         // API를 통해 현재 로그인한 사용자 정보 가져오기
+        // 카카오 정보가 있으면 자동으로 포함됨
         const userData = await userApi.getCurrentUser();
+        console.log('로딩된 사용자 정보:', userData);
         setUser(userData);
       } catch (error) {
         console.error('사용자 정보 로딩 실패:', error);
-        // API 서버가 준비되지 않았거나 네트워크 오류인 경우에도 계속 진행
+        
+        // 로그인이 필요한 경우
         if (error instanceof Error && error.message === '로그인이 필요합니다.') {
           setError('로그인이 필요합니다.');
         } else {
-          // API 오류는 무시하고 모의 데이터 사용
-          console.warn('API 오류로 인해 모의 데이터를 사용합니다.');
+          // API 오류는 무시하고 모의 데이터 사용 (카카오 정보 포함)
+          console.warn('API 오류로 인해 카카오 정보가 포함된 모의 데이터를 사용합니다.');
+          try {
+            const userData = await userApi.getCurrentUser();
+            console.log('모의 데이터로 로딩된 사용자 정보:', userData);
+            setUser(userData);
+          } catch (fallbackError) {
+            console.error('모의 데이터 로딩도 실패:', fallbackError);
+            setError('사용자 정보를 불러올 수 없습니다.');
+          }
         }
       } finally {
         setIsLoading(false);

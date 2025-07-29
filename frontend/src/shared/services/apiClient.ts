@@ -15,6 +15,7 @@ class ApiClient {
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
+    console.log('API 클라이언트 초기화:', this.baseURL);
   }
 
   private async request<T>(
@@ -34,17 +35,26 @@ class ApiClient {
       ...options,
     };
 
+    console.log(`API 요청: ${config.method || 'GET'} ${url}`);
+
     try {
       const response = await fetch(url, config);
       
+      console.log(`API 응답 상태: ${response.status} ${response.statusText}`);
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`API 오류 응답: ${response.status} - ${errorText}`);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
       
       const data = await response.json();
+      console.log('API 응답 데이터:', data);
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
+      console.error('API 요청 실패:', error);
+      console.error('요청 URL:', url);
+      console.error('요청 설정:', config);
       throw error;
     }
   }

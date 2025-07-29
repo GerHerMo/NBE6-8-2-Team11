@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User } from '../types';
 import { userApi } from '../../../shared/services/userApi';
 
@@ -20,6 +20,19 @@ export default function ProfileEdit({ user, setUser }: ProfileEditProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+
+  // 사용자 정보가 변경될 때 폼 데이터 업데이트
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        bio: user.bio || ''
+      });
+    }
+  }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -73,6 +86,19 @@ export default function ProfileEdit({ user, setUser }: ProfileEditProps) {
             : 'bg-red-100 text-red-800'
         }`}>
           {message}
+        </div>
+      )}
+
+      {/* 카카오 로그인 안내 */}
+      {user.email && user.email.includes('@') && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <span className="text-blue-600">🔗</span>
+            <h4 className="font-medium text-blue-900">카카오 계정 연동</h4>
+          </div>
+          <p className="text-sm text-blue-700">
+            카카오 계정으로 로그인하셨습니다. 이메일과 프로필 이미지는 카카오 계정 정보를 기반으로 설정됩니다.
+          </p>
         </div>
       )}
 
@@ -159,7 +185,7 @@ export default function ProfileEdit({ user, setUser }: ProfileEditProps) {
       </div>
 
       {/* 제출 버튼 */}
-      <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+      <div className="flex justify-end space-x-3">
         <button
           type="button"
           onClick={() => {

@@ -23,16 +23,19 @@ function OAuth2RedirectContent() {
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
 
-        // 카카오 사용자 정보가 있으면 업데이트
+        // 카카오 사용자 정보가 있으면 로컬 스토리지에 저장
         if (accountEmail && profileImage && profileNickname) {
+          const kakaoUserInfo = {
+            account_email: accountEmail,
+            profile_image: profileImage,
+            profile_nickname: profileNickname
+          };
+          
+          // 카카오 사용자 정보를 로컬 스토리지에 저장
+          localStorage.setItem('kakaoUserInfo', JSON.stringify(kakaoUserInfo));
+          
           setIsProcessing(true);
           try {
-            const kakaoUserInfo = {
-              account_email: accountEmail,
-              profile_image: profileImage,
-              profile_nickname: profileNickname
-            };
-
             // 카카오 사용자 정보로 사용자 정보 업데이트
             await userApi.updateUserFromKakao(kakaoUserInfo);
             console.log('카카오 사용자 정보 업데이트 완료');
