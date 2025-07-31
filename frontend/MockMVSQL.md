@@ -53,7 +53,7 @@
    - props로 받은 데이터 사용하도록 변경
 ```
 
-#### **3-2. 입양 신청 페이지**
+#### **3-2. 입양 신청 페이지** [0731] 완료
 ```
 1. src/app/apply/page.tsx
    - MOCK_PETS, MOCK_SHELTERS import 삭제
