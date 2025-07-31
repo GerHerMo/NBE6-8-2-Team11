@@ -8,37 +8,39 @@ import ProfileEdit from '../../features/profile/components/ProfileEdit';
 import AdoptionHistory from '../../features/profile/components/AdoptionHistory';
 import LoadingSpinner from '../../shared/components/common/LoadingSpinner';
 import ErrorBoundary from '../../shared/components/common/ErrorBoundary';
+import { memberService } from '../../shared/services/memberService';
 import { User } from '../../features/profile/types';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('info');
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 실제 API 호출 대신 모의 데이터 사용
     const loadUserData = async () => {
       setIsLoading(true);
+      setError(null);
       try {
-        // 모의 로딩 시간
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const userData = await memberService.getCurrentUser();
         
-        // 모의 사용자 데이터 (김동물로 설정)
-        const mockUser: User = {
-          id: 1,
-          name: '김동물',
-          email: 'kim@example.com',
-          phone: '010-1234-5678',
-          address: '서울시 강남구',
-          profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-          memberType: 'adopter', // adopter, shelter
-          createdAt: new Date('2024-01-15'),
-          bio: '동물을 사랑하는 사람입니다. 새로운 가족을 찾고 있어요!'
+        // API 응답을 User 타입으로 변환
+        const user: User = {
+          id: userData.id,
+          name: userData.nickname || userData.name,
+          email: userData.email,
+          phone: userData.phone || '',
+          address: userData.address || '',
+          profileImage: userData.profileImage || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+          memberType: userData.memberType || 'adopter',
+          createdAt: new Date(userData.createdAt),
+          bio: userData.bio || '동물을 사랑하는 사람입니다.'
         };
         
-        setUser(mockUser);
+        setUser(user);
       } catch (error) {
         console.error('사용자 정보 로딩 실패:', error);
+        setError('사용자 정보를 불러오는데 실패했습니다.');
       } finally {
         setIsLoading(false);
       }
@@ -59,6 +61,28 @@ export default function ProfilePage() {
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
           <LoadingSpinner size="lg" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="text-6xl mb-4">😔</div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">오류가 발생했습니다</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              다시 시도
+            </button>
+          </div>
         </div>
         <Footer />
       </div>

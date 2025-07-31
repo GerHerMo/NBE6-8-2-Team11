@@ -3,66 +3,38 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { AdoptionRecord } from '../types';
+import { adoptionService } from '../../../shared/services/adoptionService';
 import { formatDate } from '../../../shared/utils';
 
 export default function AdoptionHistory() {
   const [adoptionRecords, setAdoptionRecords] = useState<AdoptionRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadAdoptionHistory = async () => {
       setIsLoading(true);
+      setError(null);
       try {
-        // 모의 로딩 시간
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const adoptions = await adoptionService.getAdoptionApplications();
         
-        // 모의 입양 이력 데이터
-        const mockRecords: AdoptionRecord[] = [
-          {
-            id: 1,
-            petId: 1,
-            petName: '멍멍이',
-            petImage: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=100&h=100&fit=crop',
-            shelterName: '행복한 동물보호소',
-            status: 'completed',
-            appliedAt: new Date('2024-01-15'),
-            updatedAt: new Date('2024-02-01')
-          },
-          {
-            id: 2,
-            petId: 3,
-            petName: '나비',
-            petImage: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop',
-            shelterName: '사랑의 동물병원',
-            status: 'pending',
-            appliedAt: new Date('2024-03-10')
-          },
-          {
-            id: 3,
-            petId: 5,
-            petName: '토토',
-            petImage: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&h=100&fit=crop',
-            shelterName: '미래동물병원',
-            status: 'rejected',
-            appliedAt: new Date('2024-02-20'),
-            updatedAt: new Date('2024-02-25')
-          },
-          {
-            id: 4,
-            petId: 7,
-            petName: '루시',
-            petImage: 'https://images.unsplash.com/photo-1597626133663-53df9633b799?w=200&h=200&fit=crop',
-            shelterName: '희망동물보호소',
-            status: 'approved',
-            appliedAt: new Date('2024-03-15'),
-            updatedAt: new Date('2024-03-18')
-          }
-        ];
+        // API 응답을 AdoptionRecord 타입으로 변환
+        const records: AdoptionRecord[] = adoptions.map((adoption: any) => ({
+          id: adoption.id,
+          petId: adoption.petId,
+          petName: adoption.pet?.name || '알 수 없는 동물',
+          petImage: adoption.pet?.imageUrl,
+          shelterName: adoption.pet?.shelterName || '알 수 없는 보호소',
+          status: adoption.status,
+          appliedAt: new Date(adoption.createdAt),
+          updatedAt: adoption.updatedAt ? new Date(adoption.updatedAt) : undefined
+        }));
         
-        setAdoptionRecords(mockRecords);
+        setAdoptionRecords(records);
       } catch (error) {
         console.error('입양 이력 로딩 실패:', error);
+        setError('입양 이력을 불러오는데 실패했습니다.');
       } finally {
         setIsLoading(false);
       }
@@ -101,6 +73,22 @@ export default function AdoptionHistory() {
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
         <p className="text-gray-500 mt-2">입양 이력을 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-6xl mb-4">😔</div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">오류가 발생했습니다</h3>
+        <p className="text-gray-500 mb-4">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+        >
+          다시 시도
+        </button>
       </div>
     );
   }

@@ -31,8 +31,13 @@ export interface Member {
   email: string;
   password: string;
   name: string;
+  nickname?: string; // 닉네임 필드 추가
   role: 'user' | 'admin' | 'shelter_manager';
   phone?: string;
+  address?: string; // 주소 필드 추가
+  profileImage?: string; // 프로필 이미지 필드 추가
+  memberType?: 'adopter' | 'shelter'; // 회원 타입 필드 추가
+  bio?: string; // 자기소개 필드 추가
   createdAt: Date;
 }
 
