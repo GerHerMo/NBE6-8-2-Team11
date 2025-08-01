@@ -13,6 +13,7 @@ interface ApiResponse<T> {
 
 class ApiClient {
   private baseURL: string;
+  private isRedirecting = false;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
@@ -46,7 +47,8 @@ class ApiClient {
       
       if (!response.ok) {
         // 401 Unauthorized 에러 처리
-        if (response.status === 401) {
+        if (response.status === 401 && !this.isRedirecting) {
+          this.isRedirecting = true;
           // 토큰이 만료되었거나 유효하지 않은 경우
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
@@ -54,7 +56,7 @@ class ApiClient {
           localStorage.removeItem('userEmail');
           localStorage.removeItem('userName');
           
-          // 로그인 페이지로 리다이렉트
+          // 로그인 페이지로 리다이렉트 (한 번만)
           if (typeof window !== 'undefined') {
             window.location.href = '/login';
           }
