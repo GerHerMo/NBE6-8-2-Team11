@@ -1,13 +1,12 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import Header from '../../../shared/components/layout/Header';
+import Image from 'next/image';
 import Footer from '../../../shared/components/layout/Footer';
 import { petService } from '../../../shared/services/petService';
-import { Pet } from '../../../shared/types';
 import { formatAnimalAge, formatAnimalGender, formatAnimalSpecies } from '../../../shared/utils';
-import Image from 'next/image';
+import { Pet } from '@/shared/types';
 
 export default function AnimalDetailPage() {
   const params = useParams();
@@ -38,7 +37,6 @@ export default function AnimalDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
         </div>
@@ -50,7 +48,6 @@ export default function AnimalDetailPage() {
   if (error || !pet) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
           <div className="text-6xl mb-4">🐾</div>
           <h2 className="text-2xl font-bold mb-2">동물을 찾을 수 없습니다</h2>
@@ -66,7 +63,6 @@ export default function AnimalDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* 헤더 영역 */}
         <div className="border-b border-gray-200 p-6 mb-8">

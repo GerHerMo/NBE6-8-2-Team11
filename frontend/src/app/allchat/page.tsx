@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '../../shared/components/layout/Header';
 import Footer from '../../shared/components/layout/Footer';
 
 interface Message {
@@ -84,8 +83,6 @@ export default function AllChatPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-sm">
           <div className="flex h-[600px]">

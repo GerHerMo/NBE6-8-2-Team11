@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Header from '../../shared/components/layout/Header';
 import Footer from '../../shared/components/layout/Footer';
 import ProfileInfo from '../../features/profile/components/ProfileInfo';
 import ProfileEdit from '../../features/profile/components/ProfileEdit';
@@ -56,7 +55,6 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
           <LoadingSpinner size="lg" />
         </div>
@@ -68,7 +66,6 @@ export default function ProfilePage() {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50">
-        <Header />
         
         <main className="max-w-6xl mx-auto px-4 py-8">
           {/* 페이지 헤더 */}
