@@ -21,31 +21,34 @@ export default function UserManagement() {
       // API 실패 시 목 데이터 사용
       const mockUsers: AdminUser[] = [
         {
-          id: '1',
-          username: 'user1',
+          id: 1,
+          member: 'user1',
           email: 'user1@example.com',
-          nickname: '사용자1',
-          createdAt: '2024-01-01',
-          status: 'active',
-          role: 'USER'
+          password: '',
+          name: '사용자1',
+          role: 'USER',
+          phone: '010-1234-5678',
+          createdAt: new Date('2024-01-01')
         },
         {
-          id: '2',
-          username: 'admin',
+          id: 2,
+          member: 'admin',
           email: 'admin@example.com',
-          nickname: '관리자',
-          createdAt: '2024-01-02',
-          status: 'active',
-          role: 'ADMIN'
+          password: '',
+          name: '관리자',
+          role: 'ADMIN',
+          phone: '010-9876-5432',
+          createdAt: new Date('2024-01-02')
         },
         {
-          id: '3',
-          username: 'user3',
+          id: 3,
+          member: 'user3',
           email: 'user3@example.com',
-          nickname: '사용자3',
-          createdAt: '2024-01-03',
-          status: 'inactive',
-          role: 'USER'
+          password: '',
+          name: '사용자3',
+          role: 'USER',
+          phone: '010-5555-5555',
+          createdAt: new Date('2024-01-03')
         }
       ];
       setUsers(mockUsers);
@@ -63,7 +66,7 @@ export default function UserManagement() {
     } catch (error) {
       console.error('회원 정보 조회 실패:', error);
       // API 실패 시 로컬 데이터에서 찾기
-      const user = users.find(u => u.id === userId);
+      const user = users.find(u => u.id.toString() === userId);
       if (user) {
         setSelectedUser(user);
         setShowUserDetail(true);
@@ -77,12 +80,12 @@ export default function UserManagement() {
     
     try {
       await adminService.deleteMember(userId);
-      setUsers(users.filter(user => user.id !== userId));
+      setUsers(users.filter(user => user.id.toString() !== userId));
       alert('회원이 삭제되었습니다.');
     } catch (error) {
       console.error('회원 삭제 실패:', error);
       // API 실패 시 로컬에서만 삭제
-      setUsers(users.filter(user => user.id !== userId));
+      setUsers(users.filter(user => user.id.toString() !== userId));
       alert('회원이 삭제되었습니다.');
     }
   };
@@ -91,16 +94,10 @@ export default function UserManagement() {
   const updateUserStatus = async (userId: string, status: 'active' | 'inactive' | 'banned') => {
     try {
       // TODO: API 엔드포인트가 추가되면 여기에 구현
-      setUsers(users.map(user => 
-        user.id === userId ? { ...user, status } : user
-      ));
+      // 현재는 Member 타입에 status 필드가 없으므로 로컬에서만 처리
       alert('회원 상태가 변경되었습니다.');
     } catch (error) {
       console.error('회원 상태 변경 실패:', error);
-      // API 실패 시 로컬에서만 변경
-      setUsers(users.map(user => 
-        user.id === userId ? { ...user, status } : user
-      ));
       alert('회원 상태가 변경되었습니다.');
     }
   };
@@ -110,9 +107,9 @@ export default function UserManagement() {
   }, []);
 
   const filteredUsers = users.filter(user =>
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.member.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.nickname.toLowerCase().includes(searchTerm.toLowerCase())
+    user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -132,7 +129,7 @@ export default function UserManagement() {
       <div className="mb-6">
         <input
           type="text"
-          placeholder="회원 검색 (이름, 이메일, 닉네임)"
+          placeholder="회원 검색 (아이디, 이메일, 이름)"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -148,22 +145,22 @@ export default function UserManagement() {
                 ID
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                사용자명
+                아이디
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 이메일
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                닉네임
+                이름
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 역할
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                가입일
+                전화번호
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                상태
+                가입일
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 작업
@@ -190,13 +187,13 @@ export default function UserManagement() {
                     {user.id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.username}
+                    {user.member}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {user.email}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.nickname}
+                    {user.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -206,33 +203,21 @@ export default function UserManagement() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.createdAt}
+                    {user.phone || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      user.status === 'active' ? 'bg-green-100 text-green-800' :
-                      user.status === 'inactive' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {user.status === 'active' ? '활성' : user.status === 'inactive' ? '비활성' : '차단'}
-                    </span>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {user.createdAt.toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => fetchUserById(user.id)}
+                        onClick={() => fetchUserById(user.id.toString())}
                         className="text-blue-600 hover:text-blue-900"
                       >
                         상세
                       </button>
                       <button
-                        onClick={() => updateUserStatus(user.id, user.status === 'active' ? 'inactive' : 'active')}
-                        className="text-yellow-600 hover:text-yellow-900"
-                      >
-                        {user.status === 'active' ? '비활성화' : '활성화'}
-                      </button>
-                      <button
-                        onClick={() => deleteUser(user.id)}
+                        onClick={() => deleteUser(user.id.toString())}
                         className="text-red-600 hover:text-red-900"
                       >
                         삭제
@@ -258,16 +243,16 @@ export default function UserManagement() {
                   <p className="text-sm text-gray-900">{selectedUser.id}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">사용자명</label>
-                  <p className="text-sm text-gray-900">{selectedUser.username}</p>
+                  <label className="block text-sm font-medium text-gray-700">아이디</label>
+                  <p className="text-sm text-gray-900">{selectedUser.member}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">이메일</label>
                   <p className="text-sm text-gray-900">{selectedUser.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">닉네임</label>
-                  <p className="text-sm text-gray-900">{selectedUser.nickname}</p>
+                  <label className="block text-sm font-medium text-gray-700">이름</label>
+                  <p className="text-sm text-gray-900">{selectedUser.name}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">역할</label>
@@ -276,14 +261,12 @@ export default function UserManagement() {
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">가입일</label>
-                  <p className="text-sm text-gray-900">{selectedUser.createdAt}</p>
+                  <label className="block text-sm font-medium text-gray-700">전화번호</label>
+                  <p className="text-sm text-gray-900">{selectedUser.phone || '-'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">상태</label>
-                  <p className="text-sm text-gray-900">
-                    {selectedUser.status === 'active' ? '활성' : selectedUser.status === 'inactive' ? '비활성' : '차단'}
-                  </p>
+                  <label className="block text-sm font-medium text-gray-700">가입일</label>
+                  <p className="text-sm text-gray-900">{selectedUser.createdAt.toLocaleDateString()}</p>
                 </div>
               </div>
               <div className="flex justify-end space-x-3 mt-6">

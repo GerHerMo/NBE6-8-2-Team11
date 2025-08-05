@@ -17,9 +17,12 @@ export default function PetManagement() {
   const [newPet, setNewPet] = useState({
     name: '',
     species: '',
-    breed: '',
     age: '',
-    ownerId: ''
+    gender: 'MALE' as 'MALE' | 'FEMALE',
+    description: '',
+    imageUrl: '',
+    shelterName: '',
+    memberIdCreatedBy: ''
   });
 
   // 펫 목록 조회
@@ -33,37 +36,43 @@ export default function PetManagement() {
       // API 실패 시 목 데이터 사용
       const mockPets: AdminPet[] = [
         {
-          id: '1',
+          id: 1,
           name: '멍멍이',
-          species: '강아지',
-          breed: '골든 리트리버',
+          species: 'dog',
           age: 3,
-          ownerId: '1',
-          ownerName: '사용자1',
-          createdAt: '2024-01-01',
-          status: 'active'
+          gender: 'MALE',
+          description: '활발하고 친근한 강아지입니다.',
+          imageUrl: '/images/dog1.jpg',
+          shelterName: '행복한 보호소',
+          memberIdCreatedBy: 1,
+          createdAt: new Date('2024-01-01'),
+          petStatuses: []
         },
         {
-          id: '2',
+          id: 2,
           name: '냥냥이',
-          species: '고양이',
-          breed: '페르시안',
+          species: 'cat',
           age: 2,
-          ownerId: '2',
-          ownerName: '사용자2',
-          createdAt: '2024-01-02',
-          status: 'active'
+          gender: 'FEMALE',
+          description: '조용하고 우아한 고양이입니다.',
+          imageUrl: '/images/cat1.jpg',
+          shelterName: '사랑의 보호소',
+          memberIdCreatedBy: 2,
+          createdAt: new Date('2024-01-02'),
+          petStatuses: []
         },
         {
-          id: '3',
+          id: 3,
           name: '토끼',
-          species: '토끼',
-          breed: '네덜란드 드워프',
+          species: 'rabbit',
           age: 1,
-          ownerId: '3',
-          ownerName: '사용자3',
-          createdAt: '2024-01-03',
-          status: 'inactive'
+          gender: 'FEMALE',
+          description: '귀엽고 작은 토끼입니다.',
+          imageUrl: '/images/rabbit1.jpg',
+          shelterName: '동물의 집',
+          memberIdCreatedBy: 3,
+          createdAt: new Date('2024-01-03'),
+          petStatuses: []
         }
       ];
       setPets(mockPets);
@@ -81,7 +90,7 @@ export default function PetManagement() {
     } catch (error) {
       console.error('펫 정보 조회 실패:', error);
       // API 실패 시 로컬 데이터에서 찾기
-      const pet = pets.find(p => p.id === petId);
+      const pet = pets.find(p => p.id.toString() === petId);
       if (pet) {
         setSelectedPet(pet);
         setShowPetDetail(true);
@@ -91,8 +100,8 @@ export default function PetManagement() {
 
   // 펫 등록
   const addPet = async () => {
-    if (!newPet.name || !newPet.species || !newPet.breed || !newPet.age || !newPet.ownerId) {
-      alert('모든 필드를 입력해주세요.');
+    if (!newPet.name || !newPet.species || !newPet.age || !newPet.description || !newPet.memberIdCreatedBy) {
+      alert('필수 필드를 모두 입력해주세요.');
       return;
     }
 
@@ -100,32 +109,55 @@ export default function PetManagement() {
       const petData: CreatePetRequest = {
         name: newPet.name,
         species: newPet.species,
-        breed: newPet.breed,
         age: parseInt(newPet.age),
-        ownerId: newPet.ownerId
+        gender: newPet.gender,
+        description: newPet.description,
+        imageUrl: newPet.imageUrl || undefined,
+        shelterName: newPet.shelterName || undefined,
+        memberIdCreatedBy: parseInt(newPet.memberIdCreatedBy)
       };
 
       const newPetData = await adminService.createPet(petData);
       setPets([...pets, newPetData]);
-      setNewPet({ name: '', species: '', breed: '', age: '', ownerId: '' });
+      setNewPet({
+        name: '',
+        species: '',
+        age: '',
+        gender: 'MALE',
+        description: '',
+        imageUrl: '',
+        shelterName: '',
+        memberIdCreatedBy: ''
+      });
       setShowAddForm(false);
       alert('펫이 등록되었습니다.');
     } catch (error) {
       console.error('펫 등록 실패:', error);
       // API 실패 시 로컬에서만 추가
       const pet: AdminPet = {
-        id: Date.now().toString(),
+        id: Date.now(),
         name: newPet.name,
         species: newPet.species,
-        breed: newPet.breed,
         age: parseInt(newPet.age),
-        ownerId: newPet.ownerId,
-        ownerName: `사용자${newPet.ownerId}`,
-        createdAt: new Date().toISOString().split('T')[0],
-        status: 'active'
+        gender: newPet.gender,
+        description: newPet.description,
+        imageUrl: newPet.imageUrl || undefined,
+        shelterName: newPet.shelterName || undefined,
+        memberIdCreatedBy: parseInt(newPet.memberIdCreatedBy),
+        createdAt: new Date(),
+        petStatuses: []
       };
       setPets([...pets, pet]);
-      setNewPet({ name: '', species: '', breed: '', age: '', ownerId: '' });
+      setNewPet({
+        name: '',
+        species: '',
+        age: '',
+        gender: 'MALE',
+        description: '',
+        imageUrl: '',
+        shelterName: '',
+        memberIdCreatedBy: ''
+      });
       setShowAddForm(false);
       alert('펫이 등록되었습니다.');
     }
@@ -139,11 +171,14 @@ export default function PetManagement() {
       const petData: UpdatePetRequest = {
         name: editPet.name,
         species: editPet.species,
-        breed: editPet.breed,
-        age: editPet.age
+        age: editPet.age,
+        gender: editPet.gender,
+        description: editPet.description,
+        imageUrl: editPet.imageUrl,
+        shelterName: editPet.shelterName
       };
 
-      const updatedPet = await adminService.updatePet(editPet.id, petData);
+      const updatedPet = await adminService.updatePet(editPet.id.toString(), petData);
       setPets(pets.map(pet => 
         pet.id === editPet.id ? updatedPet : pet
       ));
@@ -168,12 +203,12 @@ export default function PetManagement() {
     
     try {
       await adminService.deletePet(petId);
-      setPets(pets.filter(pet => pet.id !== petId));
+      setPets(pets.filter(pet => pet.id.toString() !== petId));
       alert('펫이 삭제되었습니다.');
     } catch (error) {
       console.error('펫 삭제 실패:', error);
       // API 실패 시 로컬에서만 삭제
-      setPets(pets.filter(pet => pet.id !== petId));
+      setPets(pets.filter(pet => pet.id.toString() !== petId));
       alert('펫이 삭제되었습니다.');
     }
   };
@@ -182,16 +217,9 @@ export default function PetManagement() {
   const updatePetStatus = async (petId: string, status: 'active' | 'inactive') => {
     try {
       // TODO: API 엔드포인트가 추가되면 여기에 구현
-      setPets(pets.map(pet => 
-        pet.id === petId ? { ...pet, status } : pet
-      ));
       alert('펫 상태가 변경되었습니다.');
     } catch (error) {
       console.error('펫 상태 변경 실패:', error);
-      // API 실패 시 로컬에서만 변경
-      setPets(pets.map(pet => 
-        pet.id === petId ? { ...pet, status } : pet
-      ));
       alert('펫 상태가 변경되었습니다.');
     }
   };
@@ -203,8 +231,8 @@ export default function PetManagement() {
   const filteredPets = pets.filter(pet =>
     pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     pet.species.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    pet.breed.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    pet.ownerName.toLowerCase().includes(searchTerm.toLowerCase())
+    pet.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (pet.shelterName && pet.shelterName.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -232,7 +260,7 @@ export default function PetManagement() {
       <div className="mb-6">
         <input
           type="text"
-          placeholder="펫 검색 (이름, 종류, 품종, 주인)"
+          placeholder="펫 검색 (이름, 종류, 설명, 보호소)"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -254,19 +282,16 @@ export default function PetManagement() {
                 종류
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                품종
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 나이
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                주인
+                성별
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                보호소
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 등록일
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                상태
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 작업
@@ -276,13 +301,13 @@ export default function PetManagement() {
           <tbody className="bg-white divide-y divide-gray-200">
             {isLoading ? (
               <tr>
-                <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                   로딩 중...
                 </td>
               </tr>
             ) : filteredPets.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                   펫이 없습니다.
                 </td>
               </tr>
@@ -299,28 +324,21 @@ export default function PetManagement() {
                     {pet.species}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {pet.breed}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {pet.age}세
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {pet.ownerName}
+                    {pet.gender === 'MALE' ? '수컷' : '암컷'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {pet.createdAt}
+                    {pet.shelterName || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      pet.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {pet.status === 'active' ? '활성' : '비활성'}
-                    </span>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {pet.createdAt.toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => fetchPetById(pet.id)}
+                        onClick={() => fetchPetById(pet.id.toString())}
                         className="text-blue-600 hover:text-blue-900"
                       >
                         상세
@@ -335,13 +353,7 @@ export default function PetManagement() {
                         수정
                       </button>
                       <button
-                        onClick={() => updatePetStatus(pet.id, pet.status === 'active' ? 'inactive' : 'active')}
-                        className="text-yellow-600 hover:text-yellow-900"
-                      >
-                        {pet.status === 'active' ? '비활성화' : '활성화'}
-                      </button>
-                      <button
-                        onClick={() => deletePet(pet.id)}
+                        onClick={() => deletePet(pet.id.toString())}
                         className="text-red-600 hover:text-red-900"
                       >
                         삭제
@@ -373,21 +385,18 @@ export default function PetManagement() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">종류</label>
-                  <input
-                    type="text"
+                  <select
                     value={newPet.species}
                     onChange={(e) => setNewPet({ ...newPet, species: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">품종</label>
-                  <input
-                    type="text"
-                    value={newPet.breed}
-                    onChange={(e) => setNewPet({ ...newPet, breed: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
+                    <option value="">종류 선택</option>
+                    <option value="dog">강아지</option>
+                    <option value="cat">고양이</option>
+                    <option value="rabbit">토끼</option>
+                    <option value="bird">새</option>
+                    <option value="other">기타</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">나이</label>
@@ -399,11 +408,49 @@ export default function PetManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">주인 ID</label>
+                  <label className="block text-sm font-medium text-gray-700">성별</label>
+                  <select
+                    value={newPet.gender}
+                    onChange={(e) => setNewPet({ ...newPet, gender: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="MALE">수컷</option>
+                    <option value="FEMALE">암컷</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">설명</label>
+                  <textarea
+                    value={newPet.description}
+                    onChange={(e) => setNewPet({ ...newPet, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">이미지 URL</label>
                   <input
                     type="text"
-                    value={newPet.ownerId}
-                    onChange={(e) => setNewPet({ ...newPet, ownerId: e.target.value })}
+                    value={newPet.imageUrl}
+                    onChange={(e) => setNewPet({ ...newPet, imageUrl: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">보호소 이름</label>
+                  <input
+                    type="text"
+                    value={newPet.shelterName}
+                    onChange={(e) => setNewPet({ ...newPet, shelterName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">등록자 ID</label>
+                  <input
+                    type="number"
+                    value={newPet.memberIdCreatedBy}
+                    onChange={(e) => setNewPet({ ...newPet, memberIdCreatedBy: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -445,21 +492,17 @@ export default function PetManagement() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">종류</label>
-                  <input
-                    type="text"
+                  <select
                     value={editPet.species}
                     onChange={(e) => setEditPet({ ...editPet, species: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">품종</label>
-                  <input
-                    type="text"
-                    value={editPet.breed}
-                    onChange={(e) => setEditPet({ ...editPet, breed: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
+                    <option value="dog">강아지</option>
+                    <option value="cat">고양이</option>
+                    <option value="rabbit">토끼</option>
+                    <option value="bird">새</option>
+                    <option value="other">기타</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">나이</label>
@@ -467,6 +510,44 @@ export default function PetManagement() {
                     type="number"
                     value={editPet.age}
                     onChange={(e) => setEditPet({ ...editPet, age: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">성별</label>
+                  <select
+                    value={editPet.gender}
+                    onChange={(e) => setEditPet({ ...editPet, gender: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="MALE">수컷</option>
+                    <option value="FEMALE">암컷</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">설명</label>
+                  <textarea
+                    value={editPet.description}
+                    onChange={(e) => setEditPet({ ...editPet, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">이미지 URL</label>
+                  <input
+                    type="text"
+                    value={editPet.imageUrl || ''}
+                    onChange={(e) => setEditPet({ ...editPet, imageUrl: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">보호소 이름</label>
+                  <input
+                    type="text"
+                    value={editPet.shelterName || ''}
+                    onChange={(e) => setEditPet({ ...editPet, shelterName: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -510,26 +591,34 @@ export default function PetManagement() {
                   <p className="text-sm text-gray-900">{selectedPet.species}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">품종</label>
-                  <p className="text-sm text-gray-900">{selectedPet.breed}</p>
-                </div>
-                <div>
                   <label className="block text-sm font-medium text-gray-700">나이</label>
                   <p className="text-sm text-gray-900">{selectedPet.age}세</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">주인</label>
-                  <p className="text-sm text-gray-900">{selectedPet.ownerName}</p>
+                  <label className="block text-sm font-medium text-gray-700">성별</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedPet.gender === 'MALE' ? '수컷' : '암컷'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">설명</label>
+                  <p className="text-sm text-gray-900">{selectedPet.description}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">이미지 URL</label>
+                  <p className="text-sm text-gray-900">{selectedPet.imageUrl || '-'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">보호소</label>
+                  <p className="text-sm text-gray-900">{selectedPet.shelterName || '-'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">등록자 ID</label>
+                  <p className="text-sm text-gray-900">{selectedPet.memberIdCreatedBy}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">등록일</label>
-                  <p className="text-sm text-gray-900">{selectedPet.createdAt}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">상태</label>
-                  <p className="text-sm text-gray-900">
-                    {selectedPet.status === 'active' ? '활성' : '비활성'}
-                  </p>
+                  <p className="text-sm text-gray-900">{selectedPet.createdAt.toLocaleDateString()}</p>
                 </div>
               </div>
               <div className="flex justify-end space-x-3 mt-6">

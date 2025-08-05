@@ -1,44 +1,37 @@
 import { apiClient } from './apiClient';
+import { Pet, Member } from '../types';
 
-// 회원 관리 인터페이스
-export interface AdminUser {
-  id: string;
-  username: string;
-  email: string;
-  nickname: string;
-  createdAt: string;
-  status: 'active' | 'inactive' | 'banned';
-  role: string;
+// 회원 관리 인터페이스 (기존 Member 타입과 일치)
+export interface AdminUser extends Member {
+  // Member 타입을 그대로 사용하되, 어드민에서 필요한 추가 필드가 있다면 여기에 추가
 }
 
-// 펫 관리 인터페이스
-export interface AdminPet {
-  id: string;
-  name: string;
-  species: string;
-  breed: string;
-  age: number;
-  ownerId: string;
-  ownerName: string;
-  createdAt: string;
-  status: 'active' | 'inactive';
+// 펫 관리 인터페이스 (기존 Pet 타입과 일치)
+export interface AdminPet extends Pet {
+  // Pet 타입을 그대로 사용하되, 어드민에서 필요한 추가 필드가 있다면 여기에 추가
 }
 
 // 펫 등록 요청 인터페이스
 export interface CreatePetRequest {
   name: string;
   species: string;
-  breed: string;
   age: number;
-  ownerId: string;
+  gender: 'MALE' | 'FEMALE';
+  description: string;
+  imageUrl?: string;
+  shelterName?: string;
+  memberIdCreatedBy: number;
 }
 
 // 펫 수정 요청 인터페이스
 export interface UpdatePetRequest {
   name: string;
   species: string;
-  breed: string;
   age: number;
+  gender: 'MALE' | 'FEMALE';
+  description: string;
+  imageUrl?: string;
+  shelterName?: string;
 }
 
 export const adminService = {
