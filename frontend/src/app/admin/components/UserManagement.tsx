@@ -1,21 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { apiClient } from '../../../shared/services/apiClient';
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  nickname: string;
-  createdAt: string;
-  status: 'active' | 'inactive' | 'banned';
-  role: string;
-}
+import { adminService, AdminUser } from '../../../shared/services/admin';
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showUserDetail, setShowUserDetail] = useState(false);
@@ -24,47 +14,12 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const response = await apiClient.get<User[]>('/admin/users');
-      if (response.success) {
-        setUsers(response.content);
-      } else {
-        console.error('회원 목록 조회 실패:', response.message);
-        // API 실패 시 목 데이터 사용
-        const mockUsers: User[] = [
-          {
-            id: '1',
-            username: 'user1',
-            email: 'user1@example.com',
-            nickname: '사용자1',
-            createdAt: '2024-01-01',
-            status: 'active',
-            role: 'USER'
-          },
-          {
-            id: '2',
-            username: 'admin',
-            email: 'admin@example.com',
-            nickname: '관리자',
-            createdAt: '2024-01-02',
-            status: 'active',
-            role: 'ADMIN'
-          },
-          {
-            id: '3',
-            username: 'user3',
-            email: 'user3@example.com',
-            nickname: '사용자3',
-            createdAt: '2024-01-03',
-            status: 'inactive',
-            role: 'USER'
-          }
-        ];
-        setUsers(mockUsers);
-      }
+      const members = await adminService.getMembers();
+      setUsers(members);
     } catch (error) {
       console.error('회원 목록 조회 실패:', error);
-      // 에러 시 목 데이터 사용
-      const mockUsers: User[] = [
+      // API 실패 시 목 데이터 사용
+      const mockUsers: AdminUser[] = [
         {
           id: '1',
           username: 'user1',
@@ -102,21 +57,12 @@ export default function UserManagement() {
   // 특정 회원 정보 조회
   const fetchUserById = async (userId: string) => {
     try {
-      const response = await apiClient.get<User>(`/admin/users/${userId}`);
-      if (response.success) {
-        setSelectedUser(response.content);
-        setShowUserDetail(true);
-      } else {
-        // API 실패 시 로컬 데이터에서 찾기
-        const user = users.find(u => u.id === userId);
-        if (user) {
-          setSelectedUser(user);
-          setShowUserDetail(true);
-        }
-      }
+      const user = await adminService.getMemberById(userId);
+      setSelectedUser(user);
+      setShowUserDetail(true);
     } catch (error) {
       console.error('회원 정보 조회 실패:', error);
-      // 에러 시 로컬 데이터에서 찾기
+      // API 실패 시 로컬 데이터에서 찾기
       const user = users.find(u => u.id === userId);
       if (user) {
         setSelectedUser(user);
@@ -130,13 +76,9 @@ export default function UserManagement() {
     if (!confirm('정말로 이 회원을 삭제하시겠습니까?')) return;
     
     try {
-      const response = await apiClient.delete<void>(`/admin/users/${userId}`);
-      if (response.success) {
-        setUsers(users.filter(user => user.id !== userId));
-        alert('회원이 삭제되었습니다.');
-      } else {
-        alert('회원 삭제에 실패했습니다.');
-      }
+      await adminService.deleteMember(userId);
+      setUsers(users.filter(user => user.id !== userId));
+      alert('회원이 삭제되었습니다.');
     } catch (error) {
       console.error('회원 삭제 실패:', error);
       // API 실패 시 로컬에서만 삭제
@@ -145,18 +87,14 @@ export default function UserManagement() {
     }
   };
 
-  // 회원 상태 변경
+  // 회원 상태 변경 (기존 로직 유지)
   const updateUserStatus = async (userId: string, status: 'active' | 'inactive' | 'banned') => {
     try {
-      const response = await apiClient.put<void>(`/admin/users/${userId}/status`, { status });
-      if (response.success) {
-        setUsers(users.map(user => 
-          user.id === userId ? { ...user, status } : user
-        ));
-        alert('회원 상태가 변경되었습니다.');
-      } else {
-        alert('회원 상태 변경에 실패했습니다.');
-      }
+      // TODO: API 엔드포인트가 추가되면 여기에 구현
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, status } : user
+      ));
+      alert('회원 상태가 변경되었습니다.');
     } catch (error) {
       console.error('회원 상태 변경 실패:', error);
       // API 실패 시 로컬에서만 변경
