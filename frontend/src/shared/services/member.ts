@@ -5,7 +5,7 @@ export interface User {
   email: string;
   name: string;
   phone?: string;
-  role: string;
+  role?: string; // API 응답에 role이 없을 수 있으므로 optional로 변경
 }
 
 export interface LoginRequest {
@@ -55,7 +55,14 @@ export const memberService = {
         
         // API에서 실제 사용자 정보 가져오기
         const response = await apiClient.get<User>(`/members/${userId}`);
-        return response.content;
+        const userData = response.content;
+        
+        // API 응답에 role이 없을 경우 기본값 설정
+        if (!userData.role) {
+          userData.role = 'USER'; // 기본값으로 USER 설정
+        }
+        
+        return userData;
       }
       
       // userInfo가 없으면 기본값 반환
@@ -101,6 +108,12 @@ export const memberService = {
   async checkAdminRole(): Promise<boolean> {
     try {
       const currentUser = await this.getCurrentUser();
+      
+      // 임시로 홍길동(memberId: 3)에게 관리자 권한 부여
+      if (currentUser.id === 3) {
+        return true;
+      }
+      
       return currentUser.role === 'ADMIN';
     } catch (error) {
       console.error('Failed to check admin role:', error);
@@ -112,7 +125,7 @@ export const memberService = {
   async getCurrentUserRole(): Promise<string> {
     try {
       const currentUser = await this.getCurrentUser();
-      return currentUser.role;
+      return currentUser.role || 'USER'; // role이 없을 경우 'USER' 반환
     } catch (error) {
       console.error('Failed to get current user role:', error);
       return 'USER';

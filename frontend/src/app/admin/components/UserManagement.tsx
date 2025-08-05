@@ -25,7 +25,7 @@ export default function UserManagement() {
           member: 'user1',
           email: 'user1@example.com',
           password: '',
-          name: '김철수',
+          name: '사용자1',
           role: 'USER',
           phone: '010-1234-5678',
           createdAt: new Date('2024-01-01')
@@ -42,10 +42,10 @@ export default function UserManagement() {
         },
         {
           id: 3,
-          member: 'hong',
-          email: 'ex@mail.com',
+          member: 'user3',
+          email: 'user3@example.com',
           password: '',
-          name: '홍길동',
+          name: '사용자3',
           role: 'USER',
           phone: '010-5555-5555',
           createdAt: new Date('2024-01-03')
