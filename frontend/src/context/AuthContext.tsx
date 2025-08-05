@@ -7,6 +7,7 @@ interface UserInfo {
   exp: number;
   nickname?: string;
   email?: string;
+  isAdmin?: boolean;
 }
 
 interface AuthContextType {

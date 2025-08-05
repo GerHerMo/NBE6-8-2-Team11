@@ -175,6 +175,16 @@ export default function Header() {
                   >
                     내 프로필
                   </Link>
+                  <Link
+                    href="/admin"
+                    className={`text-sm font-medium transition-colors ${
+                      pathname === '/admin'
+                        ? 'text-orange-600'
+                        : 'text-gray-700 hover:text-orange-500'
+                    }`}
+                  >
+                    관리자
+                  </Link>
                   <button
                     onClick={handleLogout} // `handleLogout` 사용
                     className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
