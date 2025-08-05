@@ -84,4 +84,26 @@ export const memberService = {
       };
     }
   },
+
+  // 어드민 권한 체크
+  async checkAdminRole(): Promise<boolean> {
+    try {
+      const currentUser = await this.getCurrentUser();
+      return currentUser.role === 'ADMIN';
+    } catch (error) {
+      console.error('Failed to check admin role:', error);
+      return false;
+    }
+  },
+
+  // 현재 사용자의 역할 조회
+  async getCurrentUserRole(): Promise<string> {
+    try {
+      const currentUser = await this.getCurrentUser();
+      return currentUser.role;
+    } catch (error) {
+      console.error('Failed to get current user role:', error);
+      return 'USER';
+    }
+  },
 }; 

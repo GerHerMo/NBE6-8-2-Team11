@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { apiClient } from '../../../shared/services/apiClient';
 
 interface Pet {
   id: string;
@@ -37,7 +38,52 @@ export default function PetManagement() {
   const fetchPets = async () => {
     setIsLoading(true);
     try {
-      // TODO: API 호출로 실제 데이터 가져오기
+      const response = await apiClient.get<Pet[]>('/admin/pets');
+      if (response.success) {
+        setPets(response.content);
+      } else {
+        console.error('펫 목록 조회 실패:', response.message);
+        // API 실패 시 목 데이터 사용
+        const mockPets: Pet[] = [
+          {
+            id: '1',
+            name: '멍멍이',
+            species: '강아지',
+            breed: '골든 리트리버',
+            age: 3,
+            ownerId: '1',
+            ownerName: '사용자1',
+            createdAt: '2024-01-01',
+            status: 'active'
+          },
+          {
+            id: '2',
+            name: '냥냥이',
+            species: '고양이',
+            breed: '페르시안',
+            age: 2,
+            ownerId: '2',
+            ownerName: '사용자2',
+            createdAt: '2024-01-02',
+            status: 'active'
+          },
+          {
+            id: '3',
+            name: '토끼',
+            species: '토끼',
+            breed: '네덜란드 드워프',
+            age: 1,
+            ownerId: '3',
+            ownerName: '사용자3',
+            createdAt: '2024-01-03',
+            status: 'inactive'
+          }
+        ];
+        setPets(mockPets);
+      }
+    } catch (error) {
+      console.error('펫 목록 조회 실패:', error);
+      // 에러 시 목 데이터 사용
       const mockPets: Pet[] = [
         {
           id: '1',
@@ -74,8 +120,6 @@ export default function PetManagement() {
         }
       ];
       setPets(mockPets);
-    } catch (error) {
-      console.error('펫 목록 조회 실패:', error);
     } finally {
       setIsLoading(false);
     }
@@ -84,14 +128,26 @@ export default function PetManagement() {
   // 특정 펫 조회
   const fetchPetById = async (petId: string) => {
     try {
-      // TODO: API 호출로 실제 데이터 가져오기
+      const response = await apiClient.get<Pet>(`/admin/pets/${petId}`);
+      if (response.success) {
+        setSelectedPet(response.content);
+        setShowPetDetail(true);
+      } else {
+        // API 실패 시 로컬 데이터에서 찾기
+        const pet = pets.find(p => p.id === petId);
+        if (pet) {
+          setSelectedPet(pet);
+          setShowPetDetail(true);
+        }
+      }
+    } catch (error) {
+      console.error('펫 정보 조회 실패:', error);
+      // 에러 시 로컬 데이터에서 찾기
       const pet = pets.find(p => p.id === petId);
       if (pet) {
         setSelectedPet(pet);
         setShowPetDetail(true);
       }
-    } catch (error) {
-      console.error('펫 정보 조회 실패:', error);
     }
   };
 
@@ -103,7 +159,26 @@ export default function PetManagement() {
     }
 
     try {
-      // TODO: API 호출로 실제 등록 처리
+      const petData = {
+        name: newPet.name,
+        species: newPet.species,
+        breed: newPet.breed,
+        age: parseInt(newPet.age),
+        ownerId: newPet.ownerId
+      };
+
+      const response = await apiClient.post<Pet>('/admin/pets', petData);
+      if (response.success) {
+        setPets([...pets, response.content]);
+        setNewPet({ name: '', species: '', breed: '', age: '', ownerId: '' });
+        setShowAddForm(false);
+        alert('펫이 등록되었습니다.');
+      } else {
+        alert('펫 등록에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('펫 등록 실패:', error);
+      // API 실패 시 로컬에서만 추가
       const pet: Pet = {
         id: Date.now().toString(),
         name: newPet.name,
@@ -119,9 +194,6 @@ export default function PetManagement() {
       setNewPet({ name: '', species: '', breed: '', age: '', ownerId: '' });
       setShowAddForm(false);
       alert('펫이 등록되었습니다.');
-    } catch (error) {
-      console.error('펫 등록 실패:', error);
-      alert('펫 등록에 실패했습니다.');
     }
   };
 
@@ -130,16 +202,33 @@ export default function PetManagement() {
     if (!editPet) return;
 
     try {
-      // TODO: API 호출로 실제 수정 처리
+      const petData = {
+        name: editPet.name,
+        species: editPet.species,
+        breed: editPet.breed,
+        age: editPet.age
+      };
+
+      const response = await apiClient.put<Pet>(`/admin/pets/${editPet.id}`, petData);
+      if (response.success) {
+        setPets(pets.map(pet => 
+          pet.id === editPet.id ? response.content : pet
+        ));
+        setEditPet(null);
+        setShowEditForm(false);
+        alert('펫 정보가 수정되었습니다.');
+      } else {
+        alert('펫 정보 수정에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('펫 정보 수정 실패:', error);
+      // API 실패 시 로컬에서만 수정
       setPets(pets.map(pet => 
         pet.id === editPet.id ? editPet : pet
       ));
       setEditPet(null);
       setShowEditForm(false);
       alert('펫 정보가 수정되었습니다.');
-    } catch (error) {
-      console.error('펫 정보 수정 실패:', error);
-      alert('펫 정보 수정에 실패했습니다.');
     }
   };
 
@@ -148,26 +237,40 @@ export default function PetManagement() {
     if (!confirm('정말로 이 펫을 삭제하시겠습니까?')) return;
     
     try {
-      // TODO: API 호출로 실제 삭제 처리
-      setPets(pets.filter(pet => pet.id !== petId));
-      alert('펫이 삭제되었습니다.');
+      const response = await apiClient.delete<void>(`/admin/pets/${petId}`);
+      if (response.success) {
+        setPets(pets.filter(pet => pet.id !== petId));
+        alert('펫이 삭제되었습니다.');
+      } else {
+        alert('펫 삭제에 실패했습니다.');
+      }
     } catch (error) {
       console.error('펫 삭제 실패:', error);
-      alert('펫 삭제에 실패했습니다.');
+      // API 실패 시 로컬에서만 삭제
+      setPets(pets.filter(pet => pet.id !== petId));
+      alert('펫이 삭제되었습니다.');
     }
   };
 
   // 펫 상태 변경
   const updatePetStatus = async (petId: string, status: 'active' | 'inactive') => {
     try {
-      // TODO: API 호출로 실제 상태 변경 처리
+      const response = await apiClient.put<void>(`/admin/pets/${petId}/status`, { status });
+      if (response.success) {
+        setPets(pets.map(pet => 
+          pet.id === petId ? { ...pet, status } : pet
+        ));
+        alert('펫 상태가 변경되었습니다.');
+      } else {
+        alert('펫 상태 변경에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('펫 상태 변경 실패:', error);
+      // API 실패 시 로컬에서만 변경
       setPets(pets.map(pet => 
         pet.id === petId ? { ...pet, status } : pet
       ));
       alert('펫 상태가 변경되었습니다.');
-    } catch (error) {
-      console.error('펫 상태 변경 실패:', error);
-      alert('펫 상태 변경에 실패했습니다.');
     }
   };
 

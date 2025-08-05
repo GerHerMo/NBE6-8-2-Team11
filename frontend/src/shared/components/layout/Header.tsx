@@ -9,6 +9,7 @@ import { useNotificationStore } from '../common/notify/NotificationStore';
 import NotificationDropdown from '../common/notify/NotificationDropdown';
 import { wsClient } from '../../lib/websocket';
 import { useAuth } from '../../../context/AuthContext'; // 전역 AuthContext의 useAuth 훅 임포트
+import { memberService } from '../../services/member';
 
 export default function Header() {
   // 이제 Header 컴포넌트 내부의 로컬 useAuth 훅 정의는 삭제되었습니다.
@@ -18,6 +19,7 @@ export default function Header() {
   const pathname = usePathname(); // usePathname 훅 초기화
   const { unreadCount, addNotification } = useNotificationStore();
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const handleLogout = () => {
     logout(); // AuthContext의 logout 함수 호출
@@ -38,6 +40,25 @@ export default function Header() {
       userId: 1,
     });
   };
+
+  // 어드민 권한 체크
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (isLoggedIn) {
+        try {
+          const hasAdminRole = await memberService.checkAdminRole();
+          setIsAdmin(hasAdminRole);
+        } catch (error) {
+          console.error('어드민 권한 체크 실패:', error);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminRole();
+  }, [isLoggedIn]);
 
   // 웹소켓 연결 상태 확인
   useEffect(() => {
@@ -175,16 +196,18 @@ export default function Header() {
                   >
                     내 프로필
                   </Link>
-                  <Link
-                    href="/admin"
-                    className={`text-sm font-medium transition-colors ${
-                      pathname === '/admin'
-                        ? 'text-orange-600'
-                        : 'text-gray-700 hover:text-orange-500'
-                    }`}
-                  >
-                    관리자
-                  </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className={`text-sm font-medium transition-colors ${
+                        pathname === '/admin'
+                          ? 'text-orange-600'
+                          : 'text-gray-700 hover:text-orange-500'
+                      }`}
+                    >
+                      관리자
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout} // `handleLogout` 사용
                     className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"

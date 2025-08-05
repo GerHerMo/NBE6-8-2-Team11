@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
+import { memberService } from '../../shared/services/member';
 import UserManagement from './components/UserManagement';
 import PetManagement from './components/PetManagement';
 
@@ -10,34 +11,58 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'users' | 'pets'>('users');
   const { isLoggedIn, userInfo } = useAuth();
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // 어드민 권한 체크
   useEffect(() => {
-    if (!isLoggedIn) {
-      alert('로그인이 필요합니다.');
-      router.push('/login');
-      return;
-    }
+    const checkAdminAccess = async () => {
+      if (!isLoggedIn) {
+        alert('로그인이 필요합니다.');
+        router.push('/login');
+        return;
+      }
 
-    // TODO: 실제 어드민 권한 체크 로직으로 교체
-    // 현재는 임시로 모든 로그인된 사용자가 접근 가능
-    // if (!userInfo?.isAdmin) {
-    //   alert('관리자 권한이 필요합니다.');
-    //   router.push('/');
-    //   return;
-    // }
-  }, [isLoggedIn, userInfo, router]);
+      try {
+        setIsLoading(true);
+        const hasAdminRole = await memberService.checkAdminRole();
+        setIsAdmin(hasAdminRole);
+        
+        if (!hasAdminRole) {
+          alert('관리자 권한이 필요합니다.');
+          router.push('/');
+          return;
+        }
+      } catch (error) {
+        console.error('어드민 권한 체크 실패:', error);
+        alert('권한 확인에 실패했습니다.');
+        router.push('/');
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAdminAccess();
+  }, [isLoggedIn, router]);
 
   // 로딩 중이거나 권한이 없는 경우
-  if (!isLoggedIn) {
+  if (isLoading || !isLoggedIn || isAdmin === false) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">권한을 확인하는 중...</p>
+          <p className="text-gray-600">
+            {isLoading ? '권한을 확인하는 중...' : '접근 권한이 없습니다.'}
+          </p>
         </div>
       </div>
     );
+  }
+
+  // 어드민 권한이 확인된 경우에만 페이지 렌더링
+  if (!isAdmin) {
+    return null;
   }
 
   return (
